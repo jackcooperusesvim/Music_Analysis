@@ -44,10 +44,8 @@ Using the output .csv file from this script, I generate a graph in Tableau which
 ![Dashboard2](Dashboard2.png)
 ### Interesting Notes
 According to this graph, it is in fact the case that listeners tend to prefer the earlier music of the musicians they listen to. But now is a good time to keep in mind that this data is incomplete. On Kaggle, the data is listed as "15,150 classic hits", meaning that this dataset is not representative of all music. These are hits, and that may skew our data one way or the other.
-
-\* In order to execute the sql, sqldf converts the pd.DataFrame to an in-memory sqlite3 database before executing the query on the database and then converting it back to a DataFrame. A fun project for the future might be a sql-to-pandas converter which utilizes an input string of some simplified version of sql to generate the standard pandas syntax (also potential for a nice AI tool here). This would be performance-wise essentially on equal ground with pandas, and it would also be easy to integrate into many existing pandas workflows.
-
 ## Conclusion
-
 This dataset is quite rich, and here I only really scratched the surface dealing with time and musician popularity. There is a lot of potential in other areas such as genre prediction and popularity prediction according to Spotify music attributes.
 
+
+\*In order to execute the sql, sqldf converts the pd.DataFrame to an in-memory sqlite3 database before executing the query on the database and then converting it back to a DataFrame. A fun project for the future might be a sql-to-pandas converter which utilizes an input string of some simplified version of sql to generate the standard pandas syntax (also potential for a nice AI tool here). This would be performance-wise essentially on equal ground with pandas, and it would also be easy to integrate into many existing pandas workflows.
