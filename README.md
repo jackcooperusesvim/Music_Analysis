@@ -17,8 +17,26 @@ A well known joke in some music circles is that if someone asks for your opinion
 
 Note: I am using a python library called "sqldf" which performs SQL Queries on Pandas DataFrames. It is not exactly "fast" \* , but it is a great choice for ad-hoc one-time operations. I am also starting to learn another tool called DuckDb which looks promising for easily and (somewhat) quickly performing similar computations in the future.
 ### The Script
-```rb
-# TheirOldStuff.py
+```
+import pandas as pd
+import sqldf
+
+
+df = pd.read_csv("ClassicHit.csv")
+
+artist_info = sqldf.run("""
+    SELECT artist, MIN(year) AS artist_start_year, MAX(year) AS artist_end_year, MAX(year)-MIN(year) AS artist_career_length 
+        FROM df GROUP BY artist""")
+
+full_df = sqldf.run("""
+    SELECT *, (year-artist_start_year) AS years_since_debut 
+        FROM df LEFT JOIN artist_info 
+            ON df.artist = artist_info.artist""")
+
+if full_df is not None:
+    full_df.to_csv("ClassicHit2.csv", index=False)
+
+
 ```
 
 Using the output .csv file from this script, I generate a graph in Tableau which represents the average popularity of an artist over time (grouped by genre).
