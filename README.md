@@ -50,4 +50,4 @@ This dataset is quite rich, and here I only really scratched the surface dealing
 
 <br><br>
 
-\*In order to execute the sql, sqldf converts the pd.DataFrame to an in-memory sqlite3 database before executing the query on the database and then converting it back to a DataFrame. A fun project for the future might be a sql-to-pandas converter which utilizes an input string of some simplified version of sql to generate the standard pandas syntax (also potential for a nice AI tool here). This would be performance-wise essentially on equal ground with pandas, and it would also be easy to integrate into many existing pandas workflows.
+\*_In order to execute the sql, sqldf converts the pd.DataFrame to an in-memory sqlite3 database before executing the query on the database and then converting it back to a DataFrame. A fun project for the future might be a sql-to-pandas converter which utilizes an input string of some simplified version of sql to generate the standard pandas syntax (also potential for a nice AI tool here). This would be performance-wise essentially on equal ground with pandas, and it would also be easy to integrate into many existing pandas workflows._
