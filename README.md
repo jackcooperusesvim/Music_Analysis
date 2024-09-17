@@ -17,7 +17,7 @@ A well known joke in some music circles is that if someone asks for your opinion
 
 Note: I am using a python library called "sqldf" which performs SQL Queries on Pandas DataFrames. It is not exactly "fast" \* , but it is a great choice for ad-hoc one-time operations. I am also starting to learn another tool called DuckDb which looks promising for easily and (somewhat) quickly performing similar computations in the future.
 ### The Script
-```
+```Python
 import pandas as pd
 import sqldf
 
