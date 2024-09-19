@@ -1,12 +1,16 @@
 import pandas as pd
-from sklearn import tree
-from sklearn.tree import DecisionTreeClassifier as DecTree
+from sklearn import tree, neighbors
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
-from sklearn.linear_model import LinearRegression
+from sklearn.metrics import  ConfusionMatrixDisplay, accuracy_score
 from icecream import ic
 import matplotlib.pyplot as plt
+from typing import Any
+from sklearn.utils import resample
+from numpy import average
+import numpy as np
+print('imports are over')
 
+random_state = 42
 data = pd.read_csv("ClassicHit2.csv")
 genres = ['Alt. Rock', 'Blues', 'Country', 'Disco', 'EDM', 'Folk', 'Funk',
        'Gospel', 'Jazz', 'Metal', 'Pop', 'Punk', 'R&B', 'Rap', 'Reggae',
@@ -15,16 +19,36 @@ genres = ['Alt. Rock', 'Blues', 'Country', 'Disco', 'EDM', 'Folk', 'Funk',
 def encode_genres(In: pd.Series):
     return genres.index(In.Genre)
 
+def encode_pop(In: pd.Series):
+    match In.Genre:
+        case 'Pop':
+            return 1
+        case _ :
+            return 0
+
 ic(data.columns)
-data['genre_int'] = data.apply(encode_genres, axis=1)
-ic(data.head())
-train, test = train_test_split(data, test_size = 0.1)
-train, val = train_test_split(train, test_size = (1/9))
+data['pop_int'] = data.apply(encode_pop, axis=1)
+train, val = train_test_split(data, test_size = 0.2)
+test, val = train_test_split(val, test_size = 0.5)
+pop_train = train[train['Genre']=="Pop"]
+
+balanced_train = pd.concat([resample(train,replace=False, n_samples=len(pop_train),random_state=random_state),
+                   resample(pop_train, replace=False, n_samples=len(pop_train),random_state=random_state)])
+
+ic(balanced_train['Genre'].describe())
+
+ic(len(train))
+ic(len(val))
+ic(len(test))
+
+#--------------------------------------------------------
+# Model 1 (Genre)
+#--------------------------------------------------------
 
 
 first_model_x_columns: list[str] = ["Year","Duration","Time_Signature","Danceability","Energy","Key","Loudness","Mode","Speechiness","Acousticness","Instrumentalness","Liveness","Valence","Tempo","years_since_debut"]
 
-first_model_y_columns: list[str] = ["genre_int"]
+first_model_y_columns: list[str] = ["pop_int"]
 
 second_model_x_columns: list[str] =  first_model_x_columns+first_model_y_columns
 
@@ -33,30 +57,44 @@ second_model_y_columns: list[str] = ["Popularity"]
 mod_1_x: pd.DataFrame = train[first_model_x_columns]
 mod_1_y: pd.DataFrame = train[first_model_y_columns]
 
-def solve_with_model(model):
-    mod_1 = DecTree()
-    ax, fig = plt.subplots()
-    mod_1.fit(mod_1_x,mod_1_y)
-    train[f'mod_1_predict({first_model_y_columns[0]})'] = mod_1.predict(X = mod_1_x)
+bal_mod_1_x: pd.DataFrame = balanced_train[first_model_x_columns]
+bal_mod_1_y: pd.DataFrame = balanced_train[first_model_y_columns]
+
+models: list[tuple[Any, str,bool]] = [(tree.DecisionTreeClassifier(),"decision tree",False),
+                                 (neighbors.KNeighborsClassifier(),"k-nearest neighbors",False),
+                                 # (svm.SVC(),"support vector classifier")
+                                 ]
+ind = 0
+matrices: list[np.ndarray] = []
+
+for model, model_name, balanced in models:
+    if balanced:
+        model.fit(bal_mod_1_x,bal_mod_1_y)
+    else:
+        model.fit(mod_1_x,mod_1_y)
+
+    acc = accuracy_score(y_true=mod_1_y,y_pred=model.predict(X = mod_1_x))
+    ic(f'training_accuraccy {model_name}: {acc}')
+
+    acc = accuracy_score(y_true=val[first_model_y_columns[0]],y_pred=model.predict(X = val[first_model_x_columns]))
+    ic(f'validation_accuracy {model_name}: {acc}')
+    cmd = ConfusionMatrixDisplay.from_predictions(y_true=val[first_model_y_columns[0]],y_pred=model.predict(X = val[first_model_x_columns]))
+    matrices.append(cmd.confusion_matrix)
+    plt.show()
+
+    models[ind] = (model,model_name,balanced)
+    ind +=1
+
+predictions = pd.DataFrame()
+for model, model_name, _ in models:
+    predictions[model_name] = model.predict(val[first_model_x_columns])
+
+def vote(pred: pd.Series):
+    return round(average(pred))
 
 
-
-    matrix = ConfusionMatrixDisplay.from_predictions(y_true=mod_1_y,y_pred=mod_1.predict(X = mod_1_x),display_labels = genres)
-    acc = accuracy_score(y_true=mod_1_y,y_pred=mod_1.predict(X = mod_1_x))
-    ic(acc)
-
-
+voted_pred = predictions.apply(vote,axis=1)
+acc = accuracy_score(y_true=val[first_model_y_columns[0]],y_pred=voted_pred)
+ConfusionMatrixDisplay.from_predictions(y_true=val[first_model_y_columns[0]],y_pred=voted_pred)
+ic(f'validation_accuracy from vote: {acc}')
 plt.show()
-#--------------------------------------------------------
-# Model 2 (Popularity)
-#--------------------------------------------------------
-
-#
-# mod_2_x: pd.DataFrame  = train[second_model_x_columns]
-# mod_2_y: pd.DataFrame  = train[second_model_y_columns]
-#
-# mod_2 = LinearRegression()
-# mod_2.fit(mod_2_x,mod_2_y)
-#
-# train[f'mod_2_predict({second_model_y_columns[0]})'] = mod_2.predict(X = mod_2_x)
-# mod_2.fit(mod_2_x,mod_2_y)
