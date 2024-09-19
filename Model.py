@@ -10,7 +10,7 @@ from numpy import average
 import numpy as np
 print('imports are over')
 
-random_state = 42
+random_state = 320
 data = pd.read_csv("ClassicHit2.csv")
 genres = ['Alt. Rock', 'Blues', 'Country', 'Disco', 'EDM', 'Folk', 'Funk',
        'Gospel', 'Jazz', 'Metal', 'Pop', 'Punk', 'R&B', 'Rap', 'Reggae',
@@ -60,12 +60,15 @@ mod_1_y: pd.DataFrame = train[first_model_y_columns]
 bal_mod_1_x: pd.DataFrame = balanced_train[first_model_x_columns]
 bal_mod_1_y: pd.DataFrame = balanced_train[first_model_y_columns]
 
-models: list[tuple[Any, str,bool]] = [(tree.DecisionTreeClassifier(),"decision tree",False),
-                                 (neighbors.KNeighborsClassifier(),"k-nearest neighbors",False),
+models: list[tuple[Any, str,bool]] = [(tree.DecisionTreeRegressor(),"decision tree",False),
+                                 (neighbors.KNeighborsRegressor(),"k-nearest neighbors",False),
                                  # (svm.SVC(),"support vector classifier")
                                  ]
 ind = 0
 matrices: list[np.ndarray] = []
+
+def regress_to_class(model,x_data):
+    return [num.round() for num in model.predict(X = x_data)]
 
 for model, model_name, balanced in models:
     if balanced:
@@ -73,12 +76,12 @@ for model, model_name, balanced in models:
     else:
         model.fit(mod_1_x,mod_1_y)
 
-    acc = accuracy_score(y_true=mod_1_y,y_pred=model.predict(X = mod_1_x))
+    acc = accuracy_score(y_true=mod_1_y,y_pred=regress_to_class(model,mod_1_x))
     ic(f'training_accuraccy {model_name}: {acc}')
 
-    acc = accuracy_score(y_true=val[first_model_y_columns[0]],y_pred=model.predict(X = val[first_model_x_columns]))
+    acc = accuracy_score(y_true=val[first_model_y_columns],y_pred=regress_to_class(model,val[first_model_x_columns]))
     ic(f'validation_accuracy {model_name}: {acc}')
-    cmd = ConfusionMatrixDisplay.from_predictions(y_true=val[first_model_y_columns[0]],y_pred=model.predict(X = val[first_model_x_columns]))
+    cmd = ConfusionMatrixDisplay.from_predictions(y_true=val[first_model_y_columns[0]],y_pred=np.array(regress_to_class(model,val[first_model_x_columns])))
     matrices.append(cmd.confusion_matrix)
     plt.show()
 
