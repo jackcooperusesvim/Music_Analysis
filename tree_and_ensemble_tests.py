@@ -22,6 +22,7 @@ genres = ['Alt. Rock', 'Blues', 'Country', 'Disco', 'EDM', 'Folk', 'Funk',
 #-------------------------------------------------------------------------------------------------------------
 # Functions
 #-------------------------------------------------------------------------------------------------------------
+
 def regress_to_class(model, in_x):
     return [num.round() for num in model.predict(in_x)]
 
@@ -82,32 +83,54 @@ data_tup = ((train_x,train_y),
             (val_x,val_y),
             # (test_x,test_y)
             )
-tree_model = tree.DecisionTreeRegressor(max_depth=8)
-knn_model = neighbors.KNeighborsRegressor()
+iters = 2
+max_i = 12
+for i in range(max_i):
+    tree_acc_list.append(0.0)
+    knn_acc_list.append(0.0)
+    combo_acc_list.append(0.0)
+    print(i)
+    for j in range(iters):
+        max_depth = i+1
+        tree_model = tree.DecisionTreeRegressor(max_depth=max_depth)
+        knn_model = neighbors.KNeighborsRegressor()
 
-tree_model.fit(train_x,train_y)
-knn_model.fit(train_x,train_y)
+        tree_model.fit(train_x,train_y)
+        knn_model.fit(train_x,train_y)
 
-data_tup = ((train_x,train_y),(val_x,val_y),
-            # (test_x,test_y)
-            )
-data_names = ('training','validation',
-              # 'testing'
-              )
-train = True
-for x,y in data_tup:
+        data_tup = ((train_x,train_y),(val_x,val_y),
+                    # (test_x,test_y)
+                    )
+        data_names = ('training','validation',
+                      # 'testing'
+                      )
+        train = True
+        for x,y in data_tup:
 
-    tree_acc = accuracy_score(y_true=y,y_pred=regress_to_class(tree_model,x))
-    knn_acc = accuracy_score(y_true=y,y_pred=regress_to_class(knn_model,x))
-    combo_acc = accuracy_score(y_true=y,y_pred=vote_prediction(knn_model,tree_model,x))
-    ic(tree_acc)
-    ic(knn_acc)
-    ic(combo_acc)
+            tree_acc = accuracy_score(y_true=y,y_pred=regress_to_class(tree_model,x))
+            knn_acc = accuracy_score(y_true=y,y_pred=regress_to_class(knn_model,x))
+            combo_acc = accuracy_score(y_true=y,y_pred=vote_prediction(knn_model,tree_model,x))
+            if not train:
+                tree_acc_list[i] += tree_acc
+                knn_acc_list[i] += knn_acc
+                combo_acc_list[i] += knn_acc
 
-    # print(f'accuracy  k-means: {knn_acc}')
-    # print(f'accuracy tree: {tree_acc}')
-    # print(f'accuracy combo: {combo_acc}')
-    # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(knn_model,x))
-    # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(tree_model,x))
-    # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = vote_prediction(knn_model,tree_model,x))
-    # plt.show()
+            # print(f'accuracy  k-means: {knn_acc}')
+            # print(f'accuracy tree: {tree_acc}')
+            # print(f'accuracy combo: {combo_acc}')
+            # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(knn_model,x))
+            # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(tree_model,x))
+            # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = vote_prediction(knn_model,tree_model,x))
+            # plt.show()
+            train = False
+    tree_acc_list[i] = tree_acc_list[i]/iters
+    knn_acc_list[i] = knn_acc_list[i]/iters
+    combo_acc_list[i] = combo_acc_list[i]/iters
+
+dta = pd.DataFrame({'Max_Depth':[item+1 for item in list(range(max_i))], 
+                    'Tree':tree_acc_list, 
+                    'Knn': knn_acc_list, 
+                    'Combo': combo_acc_list})
+lineplot(x = 'Max_Depth', y = ['Tree', 'KNN', 'Combo'], data=dta)
+plt.savefig('acc_list.png')
+plt.show()
