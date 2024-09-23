@@ -1,6 +1,6 @@
 # Summary
 ## The Data
-I found [this](href=https://www.kaggle.com/datasets/thebumpkin/10400-classic-hits-10-genres-1923-to-2023?resource=download>this) dataset on Kaggle the other day, and as a musician, I couldn't resist. In this analysis I will be taking an informed look at the cultural nature of the different genres of music. dataset consisting of some parsed musical features of 15000 tracks of various genres on Spotify. I will be looking at some of this data, and inserting some more personal understanding of Music culture from the standpoint of a musician.
+I found [this](href=https://www.kaggle.com/datasets/thebumpkin/10400-classic-hits-10-genres-1923-to-2023?resource=download>this) dataset on Kaggle the other day, and as a musician, I couldn't resist taking a closer look. In this analysis I will be taking an informed look at the cultural nature of the different genres of music. dataset consisting of some parsed musical features of 15000 tracks of various genres on Spotify. I will be looking at some of this data, and inserting some more personal understanding of Music culture from the standpoint of a musician.
 ## The Cultural Roots of Music Genre
 In a world constantly looking for the "next thing", the time any given piece of music will remain popular seems so very short. But might there be some particular bands or styles which garner the appreciation of listeners over longer periods of time? Well, lets take a look at the data. This dashboard was designed to answer the following question: What time periods are most listened to across different styles?
 ### The Results
@@ -17,7 +17,7 @@ A well known joke in some music circles is that if someone asks for your opinion
 
 Note: I am using a python library called "sqldf" which performs SQL Queries on Pandas DataFrames. It is not exactly "fast" \* , but it is a great choice for ad-hoc one-time operations. I am also starting to learn another tool called DuckDb which looks promising for easily and (somewhat) quickly performing similar computations in the future.
 ### The Script
-```Python
+```
 import pandas as pd
 import sqldf
 
@@ -51,6 +51,8 @@ Using the output .csv file from this script, I generate a graph in Tableau which
 ![Dashboard2](Dashboard2.png)
 ### Interesting Notes
 According to this graph, it is in fact the case that listeners tend to prefer the earlier music of the musicians they listen to. But now is a good time to keep in mind that this data is incomplete. On Kaggle, the data is listed as "15,150 classic hits", meaning that this dataset is not representative of all music. These are hits, and that may be skewing our data.
+## Is it Pop?
+Next I made an attempt at a genre classification model. Using all information available at a songs release, we want to be able to classify what genre it is. I tried a couple different models which all had low degrees of success for classification (0.3 validation acc), so I decided to simplify the problem: I made a model designed to tell if a particular song is Pop. First I prepared the data for training by making sure all features were normalized. Then I tested several different Classification models (Decision Tree, KNN, MLP, Log Reg). Out of all these models, the two best performing models were the K-Nearest-Neighbors and Decision Tree, with Knn Accuracy averaging around 84% and Decision Tree averaging around 75%. Then I realized that the Decision Tree model was overfitting a lot (99% on Training, 70-77% on validation), and maybe I could tune some hyperparameters to improve that accuraccy a bit. So I started lowering the max tree-depth. Results were good, but inconsistently so. Overfitting was reduced, but I wasn't sure exactly which setting I should use (I was considering 6-15 for a limit). So I created a scripts to test each setting multiple times, and graph the validation accuraccy.
 ## Conclusion
 This dataset is quite rich, and here I only really scratched the surface dealing with time and musician popularity. There is a lot of potential in other areas such as genre prediction and popularity prediction according to Spotify music attributes.
 

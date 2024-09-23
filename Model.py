@@ -10,7 +10,7 @@ from numpy import average
 import numpy as np
 print('imports are over')
 
-random_state = 234
+random_state = 42
 data_section = pd.read_csv("ClassicHit2.csv")
 genres = ['Alt. Rock', 'Blues', 'Country', 'Disco', 'EDM', 'Folk', 'Funk',
        'Gospel', 'Jazz', 'Metal', 'Pop', 'Punk', 'R&B', 'Rap', 'Reggae',
@@ -65,27 +65,11 @@ data_tup = ((train_x,train_y),
             (val_x,val_y),
             # (test_x,test_y)
             )
-acc_list = []
-for i in range(0,10,2):
-    n_neighbors = i+1
-    knn_model = neighbors.KNeighborsClassifier(n_neighbors=n_neighbors)
-    knn_model.fit(train_x,train_y)
+knn_model = neighbors.KNeighborsClassifier(n_neighbors=1)
+knn_model.fit(pd.concat([train_x,val_x]), pd.concat([train_y,val_y]))
 
-    print(f'number of neighbors: {n_neighbors}')
-    data_names = ('training','validation','testing')
-    counter = 0
-    training = True
-    for x,y in data_tup:
-        print(data_names[counter])
-        counter+=1
-        knn_acc = accuracy_score(y_true=y,y_pred=knn_model.predict(x))
-        if not training:
-            acc_list.append(knn_acc)
+knn_acc = accuracy_score(y_true=test_y,y_pred=knn_model.predict(test_x))
+conf_mat = confusion_matrix(y_true=test_y,y_pred=knn_model.predict(test_x))
 
-        print(f'\taccuracy  k-means: {knn_acc}')
-        print(confusion_matrix(y_true=y,y_pred = knn_model.predict(x)))
-        training = not training
-fig, ax = plt.subplots()
-ax.plot(range(1,len(acc_list)+1),acc_list)
-plt.show()
-
+print(knn_acc)
+print(conf_mat)
