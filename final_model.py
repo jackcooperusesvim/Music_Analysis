@@ -49,13 +49,10 @@ def encode_pop(In: pd.Series):
 
 ic(data_section.columns)
 data_section['pop_int'] = data_section.apply(encode_pop, axis=1)
-train, val = train_test_split(data_section, test_size = 0.2)
-test, val = train_test_split(val, test_size = 0.5)
-pop_train = train[train['Genre']=="Pop"]
+train, test = train_test_split(data_section, test_size = 0.2)
 
 
 ic(len(train))
-ic(len(val))
 ic(len(test))
 
 first_model_x_columns: list[str] = ["Year","Duration","Time_Signature","Danceability","Energy","Key","Loudness","Mode","Speechiness","Acousticness","Instrumentalness","Liveness","Valence","Tempo","years_since_debut"]
@@ -69,40 +66,21 @@ second_model_y_columns: list[str] = ["Popularity"]
 
 train_x = train[["Year","Duration","Danceability","Energy","Key","Loudness","Mode","Speechiness","Acousticness","Instrumentalness","Liveness","Valence","Tempo","years_since_debut"]]
 train_y = train["pop_int"]
-val_x = val[["Year","Duration","Danceability","Energy","Key","Loudness","Mode","Speechiness","Acousticness","Instrumentalness","Liveness","Valence","Tempo","years_since_debut"]]
-val_y = val["pop_int"]
+
 test_x = test[["Year","Duration","Danceability","Energy","Key","Loudness","Mode","Speechiness","Acousticness","Instrumentalness","Liveness","Valence","Tempo","years_since_debut"]]
 test_y = test["pop_int"]
 
-tree_acc_list: list[float]= []
-knn_acc_list: list[float]= []
-combo_acc_list: list[float]= []
-
-data_tup = ((train_x,train_y),
-            (val_x,val_y),
-            # (test_x,test_y)
-            )
 tree_model = tree.DecisionTreeRegressor(max_depth=8)
 knn_model = neighbors.KNeighborsRegressor(n_neighbors=1, weights='distance')
 
 tree_model.fit(train_x,train_y)
 knn_model.fit(train_x,train_y)
 
-data_tup = ((train_x,train_y),(val_x,val_y),
-            # (test_x,test_y)
-            )
-data_names = ('training','validation',
-              # 'testing'
-              )
-train = True
-for x,y in data_tup:
+combo_acc = accuracy_score(y_true=train_y,y_pred=vote_prediction(knn_model,tree_model,train_x))
+combo_acc_test= accuracy_score(y_true=test_y,y_pred=vote_prediction(knn_model,tree_model,test_x))
 
-    tree_acc = accuracy_score(y_true=y,y_pred=regress_to_class(tree_model,x))
-    knn_acc = accuracy_score(y_true=y,y_pred=regress_to_class(knn_model,x))
-    combo_acc = accuracy_score(y_true=y,y_pred=vote_prediction(knn_model,tree_model,x))
-    ic(tree_acc)
-    ic(knn_acc)
-    ic(combo_acc)
+print(f"training score was: {combo_acc}")
+print(f"testing score was: {combo_acc_test}")
 
     # print(f'accuracy  k-means: {knn_acc}')
     # print(f'accuracy tree: {tree_acc}')

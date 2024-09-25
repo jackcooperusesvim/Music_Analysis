@@ -22,6 +22,7 @@ genres = ['Alt. Rock', 'Blues', 'Country', 'Disco', 'EDM', 'Folk', 'Funk',
 #-------------------------------------------------------------------------------------------------------------
 # Functions
 #-------------------------------------------------------------------------------------------------------------
+
 def regress_to_class(model, in_x):
     return [num.round() for num in model.predict(in_x)]
 
@@ -74,7 +75,7 @@ val_y = val["pop_int"]
 test_x = test[["Year","Duration","Danceability","Energy","Key","Loudness","Mode","Speechiness","Acousticness","Instrumentalness","Liveness","Valence","Tempo","years_since_debut"]]
 test_y = test["pop_int"]
 
-tree_acc_list: list[float]= []
+knn_dist_acc_list: list[float]= []
 knn_acc_list: list[float]= []
 combo_acc_list: list[float]= []
 
@@ -82,32 +83,44 @@ data_tup = ((train_x,train_y),
             (val_x,val_y),
             # (test_x,test_y)
             )
-tree_model = tree.DecisionTreeRegressor(max_depth=8)
-knn_model = neighbors.KNeighborsRegressor(n_neighbors=1, weights='distance')
+max_k = 12
+for k in range(1,max_k):
+    print(f'k: {k}')
+    max_depth = k+1
+    knn_model = neighbors.KNeighborsRegressor(n_neighbors=k)
+    knn_model_distance = neighbors.KNeighborsRegressor(weights='distance',n_neighbors=k)
 
-tree_model.fit(train_x,train_y)
-knn_model.fit(train_x,train_y)
+    knn_model.fit(train_x,train_y)
+    knn_model_distance.fit(train_x,train_y)
 
-data_tup = ((train_x,train_y),(val_x,val_y),
-            # (test_x,test_y)
-            )
-data_names = ('training','validation',
-              # 'testing'
-              )
-train = True
-for x,y in data_tup:
+    data_tup = ((train_x,train_y),(val_x,val_y),
+                # (test_x,test_y)
+                )
+    data_names = ('training','validation',
+                  # 'testing'
+                  )
+    train = True
+    for x,y in data_tup:
 
-    tree_acc = accuracy_score(y_true=y,y_pred=regress_to_class(tree_model,x))
-    knn_acc = accuracy_score(y_true=y,y_pred=regress_to_class(knn_model,x))
-    combo_acc = accuracy_score(y_true=y,y_pred=vote_prediction(knn_model,tree_model,x))
-    ic(tree_acc)
-    ic(knn_acc)
-    ic(combo_acc)
+        if not train:
+            knn_acc = accuracy_score(y_true=y,y_pred=regress_to_class(knn_model,x))
+            knn_dist_acc = accuracy_score(y_true=y,y_pred=regress_to_class(knn_model_distance,x))
+            knn_acc_list.append(knn_acc)
+            knn_dist_acc_list.append(knn_dist_acc)
+    
 
-    # print(f'accuracy  k-means: {knn_acc}')
-    # print(f'accuracy tree: {tree_acc}')
-    # print(f'accuracy combo: {combo_acc}')
-    # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(knn_model,x))
-    # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(tree_model,x))
-    # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = vote_prediction(knn_model,tree_model,x))
-    # plt.show()
+        train = False
+
+        # print(f'accuracy  k-means: {knn_acc}')
+        # print(f'accuracy tree: {tree_acc}')
+        # print(f'accuracy combo: {combo_acc}')
+        # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(knn_model,x))
+        # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = regress_to_class(tree_model,x))
+        # ConfusionMatrixDisplay.from_predictions(y_true=y,y_pred = vote_prediction(knn_model,tree_model,x))
+        # plt.show()
+
+dta = pd.DataFrame({'K':list(range(1,max_k)),
+                    'Distance':knn_dist_acc_list,
+                    'Uniform':knn_acc_list })
+ic(dta)
+
